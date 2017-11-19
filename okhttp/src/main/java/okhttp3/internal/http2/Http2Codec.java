@@ -32,9 +32,11 @@ import okhttp3.internal.Internal;
 import okhttp3.internal.Util;
 import okhttp3.internal.connection.StreamAllocation;
 import okhttp3.internal.http.HttpCodec;
+import okhttp3.internal.http.HttpHeaders;
 import okhttp3.internal.http.RealResponseBody;
 import okhttp3.internal.http.RequestLine;
 import okhttp3.internal.http.StatusLine;
+import okio.Buffer;
 import okio.ByteString;
 import okio.ForwardingSource;
 import okio.Okio;
@@ -108,7 +110,7 @@ public final class Http2Codec implements HttpCodec {
     List<Header> requestHeaders = http2HeadersList(request);
     stream = connection.newStream(requestHeaders, hasRequestBody);
     stream.readTimeout().timeout(chain.readTimeoutMillis(), TimeUnit.MILLISECONDS);
-    stream.writeTimeout().timeout(client.writeTimeoutMillis(), TimeUnit.MILLISECONDS);
+    stream.writeTimeout().timeout(chain.writeTimeoutMillis(), TimeUnit.MILLISECONDS);
   }
 
   @Override public void flushRequest() throws IOException {
@@ -184,8 +186,11 @@ public final class Http2Codec implements HttpCodec {
   }
 
   @Override public ResponseBody openResponseBody(Response response) throws IOException {
+    streamAllocation.eventListener.responseBodyStart(streamAllocation.call);
+    String contentType = response.header("Content-Type");
+    long contentLength = HttpHeaders.contentLength(response);
     Source source = new StreamFinishingSource(stream.getSource());
-    return new RealResponseBody(response.headers(), Okio.buffer(source));
+    return new RealResponseBody(contentType, contentLength, Okio.buffer(source));
   }
 
   @Override public void cancel() {
@@ -193,13 +198,35 @@ public final class Http2Codec implements HttpCodec {
   }
 
   class StreamFinishingSource extends ForwardingSource {
+    boolean completed = false;
+    long bytesRead = 0;
+
     StreamFinishingSource(Source delegate) {
       super(delegate);
     }
 
+    @Override public long read(Buffer sink, long byteCount) throws IOException {
+      try {
+        long read = delegate().read(sink, byteCount);
+        if (read > 0) {
+          bytesRead += read;
+        }
+        return read;
+      } catch (IOException e) {
+        endOfInput(e);
+        throw e;
+      }
+    }
+
     @Override public void close() throws IOException {
-      streamAllocation.streamFinished(false, Http2Codec.this);
       super.close();
+      endOfInput(null);
+    }
+
+    private void endOfInput(IOException e) {
+      if (completed) return;
+      completed = true;
+      streamAllocation.streamFinished(false, Http2Codec.this, bytesRead, e);
     }
   }
 }

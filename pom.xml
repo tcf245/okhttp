@@ -11,7 +11,7 @@
 
   <groupId>com.squareup.okhttp3</groupId>
   <artifactId>parent</artifactId>
-  <version>3.9.0-SNAPSHOT</version>
+  <version>3.10.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>OkHttp (Parent)</name>
@@ -547,6 +547,42 @@
       <id>alpn-when-jdk8_131</id>
       <activation>
         <jdk>1.8.0_131</jdk>
+      </activation>
+      <properties>
+        <alpn.jdk8.version>8.1.11.v20170118</alpn.jdk8.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>alpn-when-jdk8_141</id>
+      <activation>
+        <jdk>1.8.0_141</jdk>
+      </activation>
+      <properties>
+        <alpn.jdk8.version>8.1.11.v20170118</alpn.jdk8.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>alpn-when-jdk8_144</id>
+      <activation>
+        <jdk>1.8.0_144</jdk>
+      </activation>
+      <properties>
+        <alpn.jdk8.version>8.1.11.v20170118</alpn.jdk8.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>alpn-when-jdk8_151</id>
+      <activation>
+        <jdk>1.8.0_151</jdk>
+      </activation>
+      <properties>
+        <alpn.jdk8.version>8.1.11.v20170118</alpn.jdk8.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>alpn-when-jdk8_152</id>
+      <activation>
+        <jdk>1.8.0_152</jdk>
       </activation>
       <properties>
         <alpn.jdk8.version>8.1.11.v20170118</alpn.jdk8.version>

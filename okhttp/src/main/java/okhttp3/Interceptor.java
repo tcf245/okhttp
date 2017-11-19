@@ -38,6 +38,12 @@ public interface Interceptor {
      */
     @Nullable Connection connection();
 
+    Call call();
+
+    int connectTimeoutMillis();
+
+    Chain withConnectTimeout(int timeout, TimeUnit unit);
+
     int readTimeoutMillis();
 
     Chain withReadTimeout(int timeout, TimeUnit unit);
